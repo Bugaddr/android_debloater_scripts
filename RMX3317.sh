@@ -62,7 +62,7 @@ uninstall_system=(
 	com.glance.internet                     # Glance for realme
 	com.google.android.apps.googleassistant # Google assistant
 	com.google.android.apps.maps            # Google maps
-	com.google.android.apps.nbu.files       # Google files
+	#com.google.android.apps.nbu.files       # Google files
 	com.google.android.apps.nbu.paisa.user  # Google pay
 	com.google.android.apps.photos          # Google photos
 	com.google.android.apps.restore         # Data restore tool
