@@ -46,8 +46,8 @@ uninstall_user=(
 )
 
 uninstall_system=(
-	com.applovin.array.apphub.vincere       # Apphub
 	com.android.chrome                      # Google chrome
+	com.applovin.array.apphub.vincere       # Apphub
 	com.coloros.assistantscreen             # Shelf
 	com.coloros.compass2                    # Compass
 	com.coloros.filemanager                 # Filemanager
@@ -74,9 +74,12 @@ uninstall_system=(
 	com.google.ar.lens                      # Google lens
 	com.heytap.browser                      # Heytap Browser
 	com.heytap.cloud                        # Heytap cloud
+	com.heytap.market                       # App picks
 	com.heytap.music                        # Music
 	com.heytap.pictorial                    # Lock screen magazine
 	com.heytap.usercenter                   # My realme
+	com.oplus.account                       # Account centre
+	com.oplus.aiunit                        # Ai service
 	com.oplus.games                         # Games
 	com.oplus.melody                        # Wireless earphones (firmware updater for realme/oplus earphone)
 	com.oplus.themestore                    # Theme store
