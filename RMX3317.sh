@@ -78,6 +78,7 @@ uninstall_system=(
 	com.heytap.music                        # Music
 	com.heytap.pictorial                    # Lock screen magazine
 	com.heytap.usercenter                   # My realme
+ 	com.heytap.themestore                   # Theme store
 	com.oplus.account                       # Account centre
 	com.oplus.aiunit                        # Ai service
 	com.oplus.games                         # Games
