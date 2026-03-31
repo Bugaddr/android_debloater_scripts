@@ -1,16 +1,47 @@
 #!/usr/bin/env bash
-# Note: Enable usb debugging & Disable Permission Monitoring (To clear app data) in setting
+# Note: Enable usb debugging & Disable Permission Monitoring (To clear app data) in settings
 # This script debloats only for user 0, edit for other user
 
-# Get user id
-# e.g: ./debloat.sh 1
-USER_ID="$1"
+# Define colors
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[0;33m'
+CYAN='\033[0;36m'
+NC='\033[0m' # No Color
+
+# Ensure adb is installed
+if ! command -v adb &> /dev/null; then
+    echo -e "${RED}Error: 'adb' is not installed or not in your PATH.${NC}"
+    exit 1
+fi
+
+# Ensure a device is connected and authorized
+if ! adb get-state 1>/dev/null 2>&1; then
+    echo -e "${RED}Error: No device connected or device unauthorized.${NC}"
+    echo -e "${YELLOW}Please plug in your phone, enable USB Debugging, and authorize the computer.${NC}"
+    exit 1
+fi
+
+# Get user id, default to 0 if not provided
+USER_ID="${1:-0}"
+
+# Validate USER_ID is a number
+if ! [[ "$USER_ID" =~ ^[0-9]+$ ]]; then
+    echo -e "${RED}Error: USER_ID must be a number.${NC}"
+    exit 1
+fi
+
+echo -e "${GREEN}Starting debloat process for USER_ID: ${USER_ID}${NC}"
+echo -e "${CYAN}----------------------------------------${NC}"
 
 # App lists
 uninstall_user=(
+	#com.phonepe.app                           # Phonepe
+	#com.realme.link                           # Realme link
+	#com.snapchat.android                      # Snapchat
 	com.block.juggle                          # Block blast
 	com.byjus.thelearningapp                  # Byju
-	com.cardfeed.video_public                 # Public
+	com.cardfeed.video_public                 # Public news app
 	com.coloros.backuprestore                 # Clone phone
 	com.coloros.note                          # Notes
 	com.coloros.onekeylockscreen              # Screen lock
@@ -30,14 +61,12 @@ uninstall_user=(
 	com.katanlabs.bridgerunio                 # Bridge run
 	com.king.candycrushsaga                   # Candycrush
 	com.linkedin.android                      # Linkedin
+	com.nearme.gamecenter                     # Nearme game center
 	com.oneplus.brickmode                     # Zen space
 	com.opos.cs                               # Hot apps
 	com.os.docvault                           # Realme docvault
-	com.phonepe.app                           # Phonepe
-	com.realme.link                           # Realme link
 	com.realmecomm.app                        # Realme community
 	com.realmestore.app                       # Realme store
-	com.snapchat.android                      # Snapchat
 	com.spotify.music                         # Spotify
 	in.amazon.mShop.android.shopping          # Amazon
 	in.mohalla.sharechat                      # Sharechat
@@ -46,11 +75,19 @@ uninstall_user=(
 )
 
 uninstall_system=(
+	#com.google.android.apps.googleassistant # Google assistant
+	#com.google.android.apps.maps            # Google maps
+	#com.google.android.apps.nbu.files       # Google files
+	#com.google.android.apps.photos          # Google photos
+	#com.google.android.calendar             # Google calendar
+	#com.google.android.googlequicksearchbox # Google search
+	#com.google.android.youtube              # Youtube
+	#com.oplus.games                         # Games
 	com.android.chrome                      # Google chrome
 	com.applovin.array.apphub.vincere       # Apphub
 	com.coloros.assistantscreen             # Shelf
 	com.coloros.compass2                    # Compass
-	com.coloros.filemanager                 # Filemanager
+	com.coloros.filemanager                 # Realme Filemanager
 	com.coloros.oshare                      # Realme share
 	com.coloros.phonemanager                # Phone manager
 	com.coloros.video                       # Video
@@ -60,30 +97,20 @@ uninstall_system=(
 	com.facebook.system                     # Meta app installer
 	com.finshell.fin                        # Finshell pay
 	com.glance.internet                     # Glance for realme
-	com.google.android.apps.googleassistant # Google assistant
-	#com.google.android.apps.maps            # Google maps
-	#com.google.android.apps.nbu.files       # Google files
 	com.google.android.apps.nbu.paisa.user  # Google pay
-	com.google.android.apps.photos          # Google photos
 	com.google.android.apps.restore         # Data restore tool
-	#com.google.android.calendar             # Google calendar
 	com.google.android.gm                   # Gmail
-	com.google.android.googlequicksearchbox # Google search
 	com.google.android.keep                 # Keep notes
-	com.google.android.youtube              # Youtube
 	com.google.ar.lens                      # Google lens
 	com.heytap.browser                      # Heytap Browser
 	com.heytap.cloud                        # Heytap cloud
-	com.heytap.market                       # App picks
 	com.heytap.music                        # Music
 	com.heytap.pictorial                    # Lock screen magazine
+	com.heytap.themestore                   # Theme store
 	com.heytap.usercenter                   # My realme
- 	com.heytap.themestore                   # Theme store
 	com.oplus.account                       # Account centre
 	com.oplus.aiunit                        # Ai service
-	com.oplus.games                         # Games
 	com.oplus.melody                        # Wireless earphones (firmware updater for realme/oplus earphone)
-	com.oplus.themestore                    # Theme store
 	com.oppo.quicksearchbox                 # Global search
 	com.redteamobile.roaming                # ORoaming
 )
@@ -113,6 +140,7 @@ disable_system=(
 	com.google.android.printservice.recommendation   # Print service recommendation service
 	com.google.android.setupwizard                   # Android setup
 	com.heytap.accessory                             # Quick device connect
+	com.heytap.market                                # App picks
 	com.heytap.mcs                                   # System messages
 	com.mediatek.omacp                               # Omacp
 	com.oplus.apprecover                             # Recover system app
@@ -131,6 +159,7 @@ disable_system=(
 	com.oplus.securitykeyboard                       # Secure keyboard
 	com.oplus.statistics.rom                         # User experience program
 	com.oplus.synergy                                # HeySynergy
+	com.oplus.themestore                             # Theme store
 	com.oplus.wifibackuprestore                      # Wifi backup/restore
 	com.qualcomm.atfwd                               # ATFWD (AT commands)
 	com.qualcomm.embms                               # EMBMS (LTE broadcasr)
@@ -142,25 +171,43 @@ disable_system=(
 	com.wapi.wapicertmanage                          # WAPI certificate
 )
 
-# Uninstall user apps
-for APP in "${uninstall_user[@]}"; do
-	echo -e "\n$APP"
-	adb shell pm uninstall --user "$USER_ID" "$APP"
-done
+# Reusable function for processing apps
+process_apps() {
+    local action="$1"
+    shift
+    local apps=("$@")
 
-# Uninstall system apps
-for APP in "${uninstall_system[@]}"; do
-	echo -e "\n$APP"
-	adb shell pm uninstall --user "$USER_ID" "$APP"
-done
+    for app in "${apps[@]}"; do
+        # Print the app name without a newline
+        printf "  %-50s " "${YELLOW}${app}${NC}"
+        
+        if [ "$action" = "uninstall" ]; then
+            if adb shell pm uninstall --user "$USER_ID" "$app" >/dev/null 2>&1; then
+                echo -e "[ ${GREEN}SUCCESS${NC} ]"
+            else
+                echo -e "[ ${RED}SKIP / FAILED${NC} ]"
+            fi
+        elif [ "$action" = "disable" ]; then
+            if adb shell "pm disable-user --user $USER_ID $app && am force-stop --user $USER_ID $app && pm clear --user $USER_ID $app" >/dev/null 2>&1; then
+                echo -e "[ ${GREEN}SUCCESS${NC} ]"
+            else
+                echo -e "[ ${RED}SKIP / FAILED${NC} ]"
+            fi
+        fi
+    done
+}
 
-# Disable system apps
-for APP in "${disable_system[@]}"; do
-	echo -e "\n$APP"
-	adb shell pm disable-user --user "$USER_ID" "$APP"
-	adb shell am force-stop --user "$USER_ID" "$APP"
-	adb shell pm clear --user "$USER_ID" "$APP"
-done
+echo -e "\n${CYAN}---> Uninstalling User Apps <---${NC}"
+process_apps "uninstall" "${uninstall_user[@]}"
+
+echo -e "\n${CYAN}---> Uninstalling System Apps <---${NC}"
+process_apps "uninstall" "${uninstall_system[@]}"
+
+echo -e "\n${CYAN}---> Disabling & Clearing System Apps <---${NC}"
+process_apps "disable" "${disable_system[@]}"
 
 # Reboot phone
-echo -e '\nReboot your device'
+echo -e "\n${CYAN}----------------------------------------${NC}"
+echo -e "${GREEN}Debloat complete!${NC}"
+echo -e "${YELLOW}It is recommended to reboot your device.${NC}"
+echo -e "${CYAN}Run 'adb reboot' or restart your device manually.${NC}"
