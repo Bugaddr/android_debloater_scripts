@@ -36,10 +36,11 @@ fi
 echo -e "${GREEN}Starting debloat process for USER_ID: ${USER_ID}${NC}"
 echo -e "${CYAN}----------------------------------------${NC}"
 
-# Fetch installed packages once to massively speed up checks
-echo -e "${YELLOW}Fetching list of installed packages...${NC}"
+# Fetch package lists once to massively speed up checks
+echo -e "${YELLOW}Fetching list of installed and disabled packages...${NC}"
 # Use tr to remove carriage returns (\r) from adb output to prevent matching bugs
 INSTALLED_APPS=$(adb shell pm list packages --user "$USER_ID" | tr -d '\r' | sed 's/^package://')
+DISABLED_APPS=$(adb shell pm list packages -d --user "$USER_ID" | tr -d '\r' | sed 's/^package://')
 
 # App lists
 uninstall_user=(
@@ -187,8 +188,8 @@ process_apps() {
     for app in "${apps[@]}"; do
         # Format the output so the colors are wrapping the padded string placeholder correctly
         printf "  ${YELLOW}%-50s${NC} " "$app"
-        
-        # Check if the app is currently installed. 
+
+        # Check if the app is currently installed.
         # -F: Fixed strings (treat dots as dots, not regex)
         # -x: Exact line match
         if ! grep -q -F -x "$app" <<< "$INSTALLED_APPS"; then
@@ -203,6 +204,12 @@ process_apps() {
                 echo -e "[ ${RED}FAILED${NC} ]"
             fi
         elif [ "$action" = "disable" ]; then
+            # Avoid re-disabling if it is already disabled
+            if grep -q -F -x "$app" <<< "$DISABLED_APPS"; then
+                echo -e "[ ${NC}ALREADY DISABLED${NC} ]"
+                continue
+            fi
+
             if adb shell "pm disable-user --user $USER_ID $app && am force-stop --user $USER_ID $app && pm clear --user $USER_ID $app" >/dev/null 2>&1; then
                 echo -e "[ ${GREEN}SUCCESS${NC} ]"
             else
