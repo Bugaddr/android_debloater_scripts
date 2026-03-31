@@ -1,13 +1,15 @@
 #!/usr/bin/env bash
+set -euo pipefail
+
 # Note: Enable usb debugging & Disable Permission Monitoring (To clear app data) in settings
 # This script debloats only for user 0, edit for other user
 
-# Define colors
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[0;33m'
-CYAN='\033[0;36m'
-NC='\033[0m' # No Color
+# Define colors natively in bash
+RED=$'\e[0;31m'
+GREEN=$'\e[0;32m'
+YELLOW=$'\e[0;33m'
+CYAN=$'\e[0;36m'
+NC=$'\e[0m' # No Color
 
 # Ensure adb is installed
 if ! command -v adb &> /dev/null; then
@@ -33,6 +35,11 @@ fi
 
 echo -e "${GREEN}Starting debloat process for USER_ID: ${USER_ID}${NC}"
 echo -e "${CYAN}----------------------------------------${NC}"
+
+# Fetch installed packages once to massively speed up checks
+echo -e "${YELLOW}Fetching list of installed packages...${NC}"
+# Use tr to remove carriage returns (\r) from adb output to prevent matching bugs
+INSTALLED_APPS=$(adb shell pm list packages --user "$USER_ID" | tr -d '\r' | sed 's/^package://')
 
 # App lists
 uninstall_user=(
@@ -178,20 +185,28 @@ process_apps() {
     local apps=("$@")
 
     for app in "${apps[@]}"; do
-        # Print the app name without a newline
-        printf "  %-50s " "${YELLOW}${app}${NC}"
+        # Format the output so the colors are wrapping the padded string placeholder correctly
+        printf "  ${YELLOW}%-50s${NC} " "$app"
         
+        # Check if the app is currently installed. 
+        # -F: Fixed strings (treat dots as dots, not regex)
+        # -x: Exact line match
+        if ! grep -q -F -x "$app" <<< "$INSTALLED_APPS"; then
+            echo -e "[ ${NC}NOT INSTALLED${NC} ]"
+            continue
+        fi
+
         if [ "$action" = "uninstall" ]; then
             if adb shell pm uninstall --user "$USER_ID" "$app" >/dev/null 2>&1; then
                 echo -e "[ ${GREEN}SUCCESS${NC} ]"
             else
-                echo -e "[ ${RED}SKIP / FAILED${NC} ]"
+                echo -e "[ ${RED}FAILED${NC} ]"
             fi
         elif [ "$action" = "disable" ]; then
             if adb shell "pm disable-user --user $USER_ID $app && am force-stop --user $USER_ID $app && pm clear --user $USER_ID $app" >/dev/null 2>&1; then
                 echo -e "[ ${GREEN}SUCCESS${NC} ]"
             else
-                echo -e "[ ${RED}SKIP / FAILED${NC} ]"
+                echo -e "[ ${RED}FAILED${NC} ]"
             fi
         fi
     done
