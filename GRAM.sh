@@ -7,9 +7,7 @@ com.android.traceur
 com.facebook.appmanager
 com.facebook.services
 com.facebook.system
-com.fingerprints.extension.service
 com.fingerprints.sensortesttool
-com.goodix.fingerprint
 com.goodix.gftest
 com.google.android.apps.googleassistant
 com.google.android.apps.restore
